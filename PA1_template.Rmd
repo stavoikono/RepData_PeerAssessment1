@@ -20,7 +20,7 @@ df$date <- as.Date(df$date)
 ```
 
 
-## What is mean total number of steps taken per day?
+## Sum of steps per day
 ```{r, echo = TRUE}
 sum <- df %>% filter(!is.na(steps)) %>% group_by(date) %>% summarize(sum=sum(steps))
 sum
@@ -72,9 +72,14 @@ avg_interval <- tapply(data$steps, data$interval, mean, na.rm=TRUE, simplify=TRU
 data$steps[nas] <- avg_interval[as.character(data$interval[nas])]
 ```
 
-### Histogram of dataset without NA.
+### Sum of total steps per day after removing NAs.
 ```{r, echo = TRUE}
 sum2 <- data %>% filter(!is.na(steps)) %>% group_by(date) %>% summarize(sum=sum(steps))
+sum2
+```
+
+### Histogram of dataset without NA.
+```{r}
 ggplot(sum2, aes(x=sum))+geom_histogram(fill="red",binwidth = 1000) +
   labs(title = "Histogram of Steps per day", x = "Steps per day", y = "Frequency")
 
@@ -111,15 +116,3 @@ ggplot(data2,aes(x=interval,y=mean))+ geom_line(aes(colour=weektype)) + facet_wr
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
