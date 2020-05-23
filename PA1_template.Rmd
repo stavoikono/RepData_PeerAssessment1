@@ -5,20 +5,120 @@ output:
     keep_md: true
 ---
 
+### Loading the libraries
+
+```{r,warning=FALSE,message=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
 
 ## Loading and preprocessing the data
-
+```{r, echo = TRUE}
+df <- read.csv("activity.csv")
+df$date <- as.Date(df$date)
+```
 
 
 ## What is mean total number of steps taken per day?
+```{r, echo = TRUE}
+sum <- df %>% filter(!is.na(steps)) %>% group_by(date) %>% summarize(sum=sum(steps))
+sum
+```
+
+### Histogram of the total number of steps taken each day
+```{r, echo = TRUE}
+ggplot(sum, aes(x=sum))+geom_histogram(fill="red",binwidth = 1000) +
+  labs(title = "Histogram of Steps per day", x = "Steps per day", y = "Frequency")
+```
+
+### Mean of the total number of steps taken per day
+```{r, echo = TRUE}
+mean_steps <- mean(sum$sum, na.rm=T)
+mean_steps
+```
+### Median of the total number of steps taken per day
+```{r, echo = TRUE}
+median_steps <- median(sum$sum, na.rm=T)
+median_steps
+```
+
+### Time series plot of the 5-minute interval and the average number of steps taken, averaged across all days
+```{r, echo = TRUE}
+actpat <- df %>% filter(!is.na(steps)) %>% group_by(interval) %>% summarise(mean=mean(steps))
+ggplot(actpat,aes(x=interval,y=mean))+ geom_line(colour="blue")
+
+```
+ 
+### 5-minute interval which on average across all the days in the dataset contains the maximum number of steps
+```{r, echo = TRUE}
+actpat[which.max(actpat$mean),]
+```
+
+### Number of missing values
+```{r, echo = TRUE}
+sum(is.na(df))
+```
+### Number of missing values per column
+```{r, echo = TRUE}
+sapply(df, function(x) sum(is.na(x)))
+```
+
+### Replacing NA's with the mean of the 5-minute interval
+```{r, echo = TRUE}
+data <- df
+nas <- is.na(df$steps)
+avg_interval <- tapply(data$steps, data$interval, mean, na.rm=TRUE, simplify=TRUE)
+data$steps[nas] <- avg_interval[as.character(data$interval[nas])]
+```
+
+### Histogram of dataset without NA.
+```{r, echo = TRUE}
+sum2 <- data %>% filter(!is.na(steps)) %>% group_by(date) %>% summarize(sum=sum(steps))
+ggplot(sum2, aes(x=sum))+geom_histogram(fill="red",binwidth = 1000) +
+  labs(title = "Histogram of Steps per day", x = "Steps per day", y = "Frequency")
+
+```
+
+### Mean after removing NAs
+```{r, echo = TRUE}
+mean_steps2 <- mean(sum2$sum, na.rm=T)
+mean_steps2
+```
+### Median after removing NAs
+```{r, echo = TRUE}
+median_steps2 <- median(sum2$sum, na.rm=T)
+median_steps2
+```
+
+### Table of mean and median before and after removing NAs.
+```{r, echo = TRUE}
+diff <- data.frame(c(mean_steps, mean_steps2),c(median_steps,median_steps2))
+colnames(diff) <- c("mean","median")
+rownames(diff) <- c("with NA", "without NA")
+diff
+```
+
+### Creating a new column with the type of day regarding is it weekday or weekend
+```{r, echo = TRUE}
+data <- data %>% mutate(weektype=ifelse(weekdays(date)=="Saturday" | weekdays(date)=="Sunday","Weekend","Weekday"))
+```
+
+### Plot of  the 5-minute interval and the average number of steps taken, averaged across all weekday days or weekend days.
+```{r, echo = TRUE}
+data2 <- data %>% group_by(interval, weektype) %>% summarise(mean=mean(steps))
+ggplot(data2,aes(x=interval,y=mean))+ geom_line(aes(colour=weektype)) + facet_wrap(weektype~.,ncol = 1, nrow=2)
+```
 
 
 
-## What is the average daily activity pattern?
 
 
 
-## Imputing missing values
+
+
+
+
 
 
 
